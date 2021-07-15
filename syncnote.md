@@ -15,6 +15,8 @@ ab -n 1000 -c 8 -p recReq.json -T 'application/json' http://127.0.0.1:2051/recom
 
 go test -bench=BenchmarkFeaProcTraversal -run=none -benchmem // -benchtime="3s" -timeout="5s" -cpu=8 -cpuprofile=cpu.prof -memprofile
 go tool pprof -http=:7301 Downloads\cpu.prof
+go build -ldflags '-w -s'
+go tool pprof http://localhost:6060/debug/pprof/profile
 
 ssh:
 sftp -i C:\Users\leon\.ssh\qtt_rsa -P 2222 lvxiaojun@j7.qutoutiao.net
@@ -75,6 +77,7 @@ hadoop fs -ls hdfs://inner-di-hdfs.1sapp.com:8020/pub1/innodata/user/rec_mengtui
 golang的GPM说明、垃圾回收
 https://juejin.im/post/5b7678f451882533110e8948
 https://zhuanlan.zhihu.com/p/77943973
+https://linuxtools-rst.readthedocs.io/zh_CN/latest/index.html 工具Linux
 
 mysql等数据处理相关:
 explain select k.id, k.exposure_day, k.exposure_content, ifnull(sum(ifnull(pv.rec_show_pv, 0)+ifnull(pv.similar_show_pv,0)+ifnull(pv.other_show_pv,0)),0) as show_pv from keep_num_info as k join recommender_content as c on k.id = c.author_id left join ( select id, rec_show_pv, similar_show_pv, other_show_pv from t_doc_history_pv where date = "2018-09-04") as pv on pv.id = c.id where c.publish_time > 1534694400000 and c.status = 2 and c.source != "趣投稿" and k.status = 1 and k.ce_date > 1535990400 group by k.id;
@@ -82,6 +85,11 @@ hive设置队列 set mapreduce.job.queuename = root.develop.adhoc.lechuan;
 awk '{sum[$3] += 1} END {for (k in sum){print k, ":", sum[k]}}' history.data
 sort -k 2 -n -r docreadtime.data| head -n 20| awk '{print $1}'| xargs -i awk '$1 == {}' docpvcount.data
 tail -1000 content.data |awk -F '[\t]' '{if ($15>60&&$8==0) print $0}'
+
+explain(sql语句)
+
+alter table recommender_content add is_autoplay_filter tinyint not null default 0;
+alter table recommender_content add second_cate varchar(60) not null default '';
 
 docker 服务
 docker run -ti --rm -m 30720M --cpus=15 --network host -v /data/go:/go \
@@ -189,3 +197,8 @@ gpups解决hash表链的原子操作问题
 show click 少， 只用1维embed
 
 --no-upgrade
+
+>/dev/null 2>&1
+
+--kafka_compression_codec="lz4"
+
